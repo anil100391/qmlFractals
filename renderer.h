@@ -9,7 +9,9 @@
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 class QQuickWindow;
+class QOpenGLBuffer;
 class QOpenGLShaderProgram;
+class QOpenGLVertexArrayObject;
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -29,10 +31,15 @@ public slots:
     void paint();
 
 private:
+    void allocatePositionBuffer(int w, int h);
+
     QSize                     m_viewportSize;
     qreal                     m_t;
-    QOpenGLShaderProgram     *m_program;
-    QQuickWindow             *m_window;
+    QOpenGLBuffer            *m_positionBuffer = nullptr;
+    QOpenGLBuffer            *m_indexBuffer = nullptr;
+    QOpenGLVertexArrayObject *m_vao = nullptr;
+    QOpenGLShaderProgram     *m_program = nullptr;
+    QQuickWindow             *m_window = nullptr;
 };
 
 #endif // RENDERER_H
