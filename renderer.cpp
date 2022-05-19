@@ -81,13 +81,11 @@ void MeshRenderer::paint()
     float w = m_viewportSize.width();
     float h = m_viewportSize.height();
 
-    /*
     f->glDisable(GL_DEPTH_TEST);
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    f->glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
+    f->glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    */
     // Bind shader program, textures for first set of objects
     m_program->bind();
     QMatrix4x4 mvp;
@@ -96,7 +94,6 @@ void MeshRenderer::paint()
     QVector2D m_c0(0.0f, 0.0f);
     float m_spanY = 3.0f;
     QVector2D m_center(0.0f, 0.0f);
-    int m_mode = 1;
     bool m_showGrid = true;
     m_program->setUniformValue("u_Color", 1.0f, 1.0f, 0.0f, 1.0f);
     m_program->setUniformValue("u_MVP", mvp);

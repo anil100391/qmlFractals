@@ -23,6 +23,7 @@ public:
     ~MeshRenderer();
 
     void setT(qreal t) { m_t = t; }
+    void setMode(int mode) { m_mode = mode; }
 
 public slots:
     void init();
@@ -32,6 +33,7 @@ private:
     void allocatePositionBuffer(int w, int h);
 
     qreal                     m_t;
+    int						  m_mode = 0;
     QOpenGLBuffer            *m_positionBuffer = nullptr;
     QOpenGLBuffer            *m_indexBuffer = nullptr;
     QOpenGLVertexArrayObject *m_vao = nullptr;

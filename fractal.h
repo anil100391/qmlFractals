@@ -46,6 +46,7 @@ class MyFrameBufferObject : public QQuickFramebufferObject
     Q_OBJECT
 
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
+    Q_PROPERTY(int mode READ mode WRITE setMode NOTIFY modeChanged)
 
 public:
     explicit MyFrameBufferObject(QQuickItem *parent = nullptr);
@@ -54,11 +55,20 @@ public:
     qreal t() const { return m_t; }
     void setT(qreal t);
 
+    int mode() const { return m_mode; }
+    void setMode(int mode);
+
+    Renderer* getRenderer() const { return renderer; }
+
 signals:
     void tChanged();
+    void modeChanged();
 
 private:
+
+    Renderer *renderer = nullptr;
     qreal            m_t;
+    int			     m_mode = 1;
 };
 
 #endif // FRACTAL_H

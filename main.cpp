@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    // QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
     QSurfaceFormat format;
     format.setMajorVersion(3);

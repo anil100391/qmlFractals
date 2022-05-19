@@ -118,6 +118,11 @@ public:
         return new QOpenGLFramebufferObject(size, format);
     }
 
+    void setFractalParams(int mode)
+    {
+        m_render.setMode(mode);
+    }
+
 private:
     MeshRenderer m_render;
 };
@@ -134,7 +139,9 @@ MyFrameBufferObject::MyFrameBufferObject(QQuickItem *parent)
 
 QQuickFramebufferObject::Renderer *MyFrameBufferObject::createRenderer() const
 {
-    return new MyFrameBufferObjectRenderer;
+    auto ncthis = const_cast<MyFrameBufferObject*>(this);
+    ncthis->renderer = new MyFrameBufferObjectRenderer;
+    return renderer;
 }
 
 void MyFrameBufferObject::setT(qreal t)
@@ -143,5 +150,17 @@ void MyFrameBufferObject::setT(qreal t)
         return;
     m_t = t;
     emit tChanged();
+    update();
+}
+
+
+void MyFrameBufferObject::setMode(int mode)
+{
+    if (mode == m_mode)
+        return;
+    m_mode = mode;
+    auto r = static_cast<MyFrameBufferObjectRenderer*>(getRenderer());
+    if (r ) r->setFractalParams(mode);
+    emit modeChanged();
     update();
 }
