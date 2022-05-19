@@ -8,15 +8,10 @@
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void Renderer::init()
+void MeshRenderer::init()
 {
     if (!m_program)
     {
-        QSGRendererInterface *rif = m_window->rendererInterface();
-        Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL);
-
-        initializeOpenGLFunctions();
-
         // Create VAO for first object to render
         m_vao = new QOpenGLVertexArrayObject();
         m_vao->create();
@@ -25,12 +20,12 @@ void Renderer::init()
         // Setup VBOs and IBO (use QOpenGLBuffer to buffer data,
         // specify format, usage hint etc). These will be
         // remembered by the currently bound VAO
-        m_positionBuffer = new QOpenGLBuffer();
+        m_positionBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         m_positionBuffer->create();
         m_positionBuffer->setUsagePattern( QOpenGLBuffer::StaticDraw );
-        allocatePositionBuffer(m_window->width(), m_window->height());
+        allocatePositionBuffer(600, 400);
 
-        m_indexBuffer = new QOpenGLBuffer();
+        m_indexBuffer = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
         m_indexBuffer->create();
         m_indexBuffer->setUsagePattern(QOpenGLBuffer::StaticDraw);
         m_indexBuffer->bind();
@@ -40,9 +35,6 @@ void Renderer::init()
         m_program = new QOpenGLShaderProgram();
         m_program->create();
         m_program->bind();
-
-        m_program->enableAttributeArray(0);
-        m_program->setAttributeBuffer( 0, GL_FLOAT, 0, 2 );
 
         #include "vert.shader"
         std::string versionStr;
@@ -66,37 +58,38 @@ void Renderer::init()
         }
 
         m_program->link();
+
+        m_positionBuffer->bind();
+        m_program->enableAttributeArray("position");
+        m_program->setAttributeBuffer("position", GL_FLOAT, 0, 2);
+        m_vao->release();
     }
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void Renderer::paint()
+void MeshRenderer::paint()
 {
-    // Play nice with the RHI. Not strictly needed when the scenegraph uses
-    // OpenGL directly.
-    m_window->beginExternalCommands();
+    auto cxt = QOpenGLContext::currentContext();
+    auto f = cxt->functions();
 
+    GLint viewportSize[4];
+    f->glGetIntegerv(GL_VIEWPORT, viewportSize);
+    QSize m_viewportSize;
+    m_viewportSize.setWidth(viewportSize[2]);
+    m_viewportSize.setHeight(viewportSize[3]);
     float w = m_viewportSize.width();
     float h = m_viewportSize.height();
 
-    glViewport(0, 0, w, h);
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
-    glClear( GL_COLOR_BUFFER_BIT );
+    /*
+    f->glDisable(GL_DEPTH_TEST);
+    f->glEnable(GL_BLEND);
+    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    f->glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
+    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    */
     // Bind shader program, textures for first set of objects
-    m_vao->bind();
-    m_positionBuffer->bind();
-    m_indexBuffer->bind();
     m_program->bind();
-    m_program->enableAttributeArray(0);
-    m_program->setAttributeBuffer( 0, GL_FLOAT, 0, 2 );
-
-    auto log = m_program->log();
     QMatrix4x4 mvp;
     mvp.ortho(0.0f, w, 0.0f, h, -1.0f, 1.0f);
 
@@ -112,41 +105,36 @@ void Renderer::paint()
     m_program->setUniformValue("u_SpanY", m_spanY);
     m_program->setUniformValue("u_Center", m_center);
     m_program->setUniformValue("u_Mode", m_mode);
-    m_program->setUniformValue("u_Width", w);
-    m_program->setUniformValue("u_Height", h);
+    m_program->setUniformValue("u_Width", (int)w);
+    m_program->setUniformValue("u_Height", (int)h);
     m_program->setUniformValue("u_ShowGrid", (m_showGrid && m_mode != 2) ? 1 : 0);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-    m_program->disableAttributeArray(0);
-    /*
+    m_vao->bind();
+    f->glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     m_vao->release();
-    m_positionBuffer->release();
-    m_indexBuffer->release();
-    m_program->release();
-    */
-
-    m_window->endExternalCommands();
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-Renderer::~Renderer()
+MeshRenderer::~MeshRenderer()
 {
-    delete m_positionBuffer;
-    delete m_indexBuffer;
-    delete m_vao;
+    m_positionBuffer->destroy();
+    m_indexBuffer->destroy();
+    m_vao->destroy();
     delete m_program;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void Renderer::allocatePositionBuffer(int w, int h)
+void MeshRenderer::allocatePositionBuffer(int w, int h)
 {
     if (w == -1)
-        w = m_window->width();
+        w = 600;
     if (h == -1)
-        h = m_window->height();
+        h = 400;
 
+    w*=2;
+    h*=2;
     m_positionBuffer->bind();
     float pad = 0.0f;
     float positionData[] = { pad, pad,
@@ -157,4 +145,3 @@ void Renderer::allocatePositionBuffer(int w, int h)
     int vertexCount = 4;
     m_positionBuffer->allocate( positionData, vertexCount * 2 * sizeof( float ) );
 }
-

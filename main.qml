@@ -1,14 +1,15 @@
 import QtQuick 2.0
 import FractalModule 1.0
-
+import MyRenderLibrary 42.0
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 Item
 {
-    width: 400
-    height: 600
+    width: 600
+    height: 400
 
-    Fractal
+    // Fractal
+    MeshRenderer
     {
         id : fractal
         SequentialAnimation on t
@@ -17,6 +18,15 @@ Item
             NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
             loops: Animation.Infinite
             running: true
+        }
+        anchors.fill : parent
+
+        Rectangle
+        {
+            width : 20
+            height : 20
+            anchors.centerIn : fractal
+            color : "red"
         }
     }
 
@@ -35,7 +45,8 @@ Item
         id: label
         color: "black"
         wrapMode: Text.WordWrap
-        text: (fractal.t * 10).toFixed(1)
+        // text: (fractal.t * 10).toFixed(1)
+        text: "QmlFractals"
         horizontalAlignment: Text.AlignHCenter
         anchors.right: parent.right
         anchors.left: parent.left

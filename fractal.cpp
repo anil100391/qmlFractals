@@ -11,10 +11,10 @@
 class CleanupJob : public QRunnable
 {
 public:
-    CleanupJob(Renderer *renderer) : m_renderer(renderer) {}
+    CleanupJob(MeshRenderer *renderer) : m_renderer(renderer) {}
     void run() override { delete m_renderer; }
 private:
-    Renderer *m_renderer;
+    MeshRenderer *m_renderer;
 };
 
 // -----------------------------------------------------------------------------
@@ -73,11 +73,75 @@ void Fractal::sync()
 {
     if (!m_renderer)
     {
-        m_renderer = new Renderer();
-        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &Renderer::init, Qt::DirectConnection);
-        connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &Renderer::paint, Qt::DirectConnection);
+        m_renderer = new MeshRenderer();
+        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &MeshRenderer::init, Qt::DirectConnection);
+        connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &MeshRenderer::paint, Qt::DirectConnection);
     }
-    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
+//    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
     m_renderer->setT(m_t);
-    m_renderer->setWindow(window());
+ //   m_renderer->setWindow(window());
+}
+
+#include <QQuickWindow>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFramebufferObjectFormat>
+#include <QQuickOpenGLUtils>
+
+class MyFrameBufferObjectRenderer : public QQuickFramebufferObject::Renderer
+{
+public:
+    MyFrameBufferObjectRenderer()
+    {
+    }
+
+    void synchronize(QQuickFramebufferObject *item) Q_DECL_OVERRIDE
+    {
+        m_render.init();
+
+        MyFrameBufferObject *i = static_cast<MyFrameBufferObject *>(item);
+        // m_render.setAzimuth(i->azimuth());
+        // m_render.setElevation(i->elevation());
+        // m_render.setDistance(i->distance());
+    }
+
+    void render() Q_DECL_OVERRIDE
+    {
+        m_render.paint();
+        QQuickOpenGLUtils::resetOpenGLState();
+    }
+
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) Q_DECL_OVERRIDE
+    {
+        QOpenGLFramebufferObjectFormat format;
+        format.setSamples(4);
+        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+        return new QOpenGLFramebufferObject(size, format);
+    }
+
+private:
+    MeshRenderer m_render;
+};
+
+
+
+// MyFrameBufferObject implementation
+
+MyFrameBufferObject::MyFrameBufferObject(QQuickItem *parent)
+    : QQuickFramebufferObject(parent)
+{
+    setMirrorVertically(false);
+}
+
+QQuickFramebufferObject::Renderer *MyFrameBufferObject::createRenderer() const
+{
+    return new MyFrameBufferObjectRenderer;
+}
+
+void MyFrameBufferObject::setT(qreal t)
+{
+    if (t == m_t)
+        return;
+    m_t = t;
+    emit tChanged();
+    update();
 }

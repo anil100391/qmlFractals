@@ -6,7 +6,7 @@
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-class Renderer;
+class MeshRenderer;
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -36,7 +36,29 @@ private:
     void releaseResources() override;
 
     qreal            m_t;
-    Renderer        *m_renderer;
+    MeshRenderer        *m_renderer;
+};
+
+#include <QQuickFramebufferObject>
+
+class MyFrameBufferObject : public QQuickFramebufferObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
+
+public:
+    explicit MyFrameBufferObject(QQuickItem *parent = nullptr);
+    Renderer *createRenderer() const Q_DECL_OVERRIDE;
+
+    qreal t() const { return m_t; }
+    void setT(qreal t);
+
+signals:
+    void tChanged();
+
+private:
+    qreal            m_t;
 };
 
 #endif // FRACTAL_H
