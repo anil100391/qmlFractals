@@ -12,14 +12,19 @@ int main(int argc, char **argv)
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
     QSurfaceFormat format;
-    format.setMajorVersion(3);
-    format.setMinorVersion(3);
+#if ANDROID
+    format.setVersion(3, 1);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setRenderableType(QSurfaceFormat::OpenGLES);
+#else
+    format.setVersion(3, 3);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
     format.setSamples(4);
+#endif
     QSurfaceFormat::setDefaultFormat(format);
-    qmlRegisterType<MyFrameBufferObject>("MyRenderLibrary", 42, 0, "MeshRenderer");
+    qmlRegisterType<FractalFrameBufferObject>("MyRenderLibrary", 42, 0, "MeshRenderer");
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

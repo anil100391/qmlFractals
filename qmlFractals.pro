@@ -6,6 +6,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 HEADERS += \
     fractal.h \
+    fractalParams.h \
     renderer.h
 SOURCES += main.cpp \
     fractal.cpp \

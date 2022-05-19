@@ -1,74 +1,41 @@
 #ifndef FRACTAL_H
 #define FRACTAL_H
 
-#include <QQuickItem>
+#include "fractalParams.h"
+
 #include <QQuickWindow>
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-class MeshRenderer;
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-class Fractal : public QQuickItem
-{
-    Q_OBJECT
-    Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
-    QML_ELEMENT
-
-public:
-    Fractal();
-
-    qreal t() const { return m_t; }
-    void setT(qreal t);
-
-signals:
-    void tChanged();
-
-public slots:
-    void sync();
-    void cleanup();
-
-private slots:
-    void handleWindowChanged(QQuickWindow *win);
-
-private:
-    void releaseResources() override;
-
-    qreal            m_t;
-    MeshRenderer        *m_renderer;
-};
-
 #include <QQuickFramebufferObject>
 
-class MyFrameBufferObject : public QQuickFramebufferObject
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+class FractalFrameBufferObject : public QQuickFramebufferObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
     Q_PROPERTY(int mode READ mode WRITE setMode NOTIFY modeChanged)
 
 public:
-    explicit MyFrameBufferObject(QQuickItem *parent = nullptr);
+    explicit FractalFrameBufferObject(QQuickItem *parent = nullptr);
     Renderer *createRenderer() const Q_DECL_OVERRIDE;
 
-    qreal t() const { return m_t; }
-    void setT(qreal t);
-
-    int mode() const { return m_mode; }
+    int mode() const { return m_params.type; }
     void setMode(int mode);
 
-    Renderer* getRenderer() const { return renderer; }
+    Renderer* getRenderer() const { return m_renderer; }
 
 signals:
-    void tChanged();
     void modeChanged();
+
+protected:
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void mousePressEvent(QMouseEvent *event) override;
 
 private:
 
-    Renderer *renderer = nullptr;
-    qreal            m_t;
-    int			     m_mode = 1;
+    Renderer      *m_renderer = nullptr;
+    FractalParams  m_params;
+    QVector2D      m_left{-3.0f, -1.5f};
+    float          m_spanY = 3.0f;
 };
 
 #endif // FRACTAL_H

@@ -1,166 +1,75 @@
 #include "fractal.h"
 #include "renderer.h"
 
-#include <QtCore/QRunnable>
-
 #include <QQuickWindow>
 #include <QOpenGLContext>
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-class CleanupJob : public QRunnable
-{
-public:
-    CleanupJob(MeshRenderer *renderer) : m_renderer(renderer) {}
-    void run() override { delete m_renderer; }
-private:
-    MeshRenderer *m_renderer;
-};
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-Fractal::Fractal()
-    : m_t(0),
-      m_renderer(nullptr)
-{
-    connect(this, &QQuickItem::windowChanged, this, &Fractal::handleWindowChanged);
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-void Fractal::setT(qreal t)
-{
-    if (t == m_t)
-        return;
-    m_t = t;
-    emit tChanged();
-    if (window())
-        window()->update();
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-void Fractal::handleWindowChanged(QQuickWindow *win)
-{
-    if (win)
-    {
-        connect(win, &QQuickWindow::beforeSynchronizing, this, &Fractal::sync, Qt::DirectConnection);
-        connect(win, &QQuickWindow::sceneGraphInvalidated, this, &Fractal::cleanup, Qt::DirectConnection);
-        // Ensure we start with cleared to black. The squircle's blend mode relies on this.
-        win->setColor(Qt::black);
-    }
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-void Fractal::cleanup()
-{
-    delete m_renderer;
-    m_renderer = nullptr;
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-void Fractal::releaseResources()
-{
-    window()->scheduleRenderJob(new CleanupJob(m_renderer), QQuickWindow::BeforeSynchronizingStage);
-    m_renderer = nullptr;
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-void Fractal::sync()
-{
-    if (!m_renderer)
-    {
-        m_renderer = new MeshRenderer();
-        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &MeshRenderer::init, Qt::DirectConnection);
-        connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &MeshRenderer::paint, Qt::DirectConnection);
-    }
-//    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
-    m_renderer->setT(m_t);
- //   m_renderer->setWindow(window());
-}
-
-#include <QQuickWindow>
 #include <QOpenGLFramebufferObject>
-#include <QOpenGLFramebufferObjectFormat>
 #include <QQuickOpenGLUtils>
 
-class MyFrameBufferObjectRenderer : public QQuickFramebufferObject::Renderer
-{
-public:
-    MyFrameBufferObjectRenderer()
-    {
-    }
-
-    void synchronize(QQuickFramebufferObject *item) Q_DECL_OVERRIDE
-    {
-        m_render.init();
-
-        MyFrameBufferObject *i = static_cast<MyFrameBufferObject *>(item);
-        // m_render.setAzimuth(i->azimuth());
-        // m_render.setElevation(i->elevation());
-        // m_render.setDistance(i->distance());
-    }
-
-    void render() Q_DECL_OVERRIDE
-    {
-        m_render.paint();
-        QQuickOpenGLUtils::resetOpenGLState();
-    }
-
-    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) Q_DECL_OVERRIDE
-    {
-        QOpenGLFramebufferObjectFormat format;
-        format.setSamples(4);
-        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-        return new QOpenGLFramebufferObject(size, format);
-    }
-
-    void setFractalParams(int mode)
-    {
-        m_render.setMode(mode);
-    }
-
-private:
-    MeshRenderer m_render;
-};
-
-
-
-// MyFrameBufferObject implementation
-
-MyFrameBufferObject::MyFrameBufferObject(QQuickItem *parent)
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+FractalFrameBufferObject::FractalFrameBufferObject(QQuickItem *parent)
     : QQuickFramebufferObject(parent)
 {
     setMirrorVertically(false);
+    setAcceptedMouseButtons(Qt::AllButtons);
 }
 
-QQuickFramebufferObject::Renderer *MyFrameBufferObject::createRenderer() const
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+QQuickFramebufferObject::Renderer *FractalFrameBufferObject::createRenderer() const
 {
-    auto ncthis = const_cast<MyFrameBufferObject*>(this);
-    ncthis->renderer = new MyFrameBufferObjectRenderer;
-    return renderer;
+    auto ncthis = const_cast<FractalFrameBufferObject*>(this);
+    ncthis->m_renderer = new FractalFrameBufferObjectRenderer;
+    return m_renderer;
 }
 
-void MyFrameBufferObject::setT(qreal t)
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void FractalFrameBufferObject::setMode(int mode)
 {
-    if (t == m_t)
+    if (mode == m_params.type)
         return;
-    m_t = t;
-    emit tChanged();
+
+    m_params.type = static_cast<FractalParams::TYPE>(mode);
+
+    auto r = static_cast<FractalFrameBufferObjectRenderer*>(getRenderer());
+    if (r)
+    {
+        r->setFractalParams(m_params);
+    }
+
+    emit modeChanged();
     update();
 }
 
-
-void MyFrameBufferObject::setMode(int mode)
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void FractalFrameBufferObject::mousePressEvent(QMouseEvent *event)
 {
-    if (mode == m_mode)
-        return;
-    m_mode = mode;
-    auto r = static_cast<MyFrameBufferObjectRenderer*>(getRenderer());
-    if (r ) r->setFractalParams(mode);
-    emit modeChanged();
+
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void FractalFrameBufferObject::mouseMoveEvent(QMouseEvent *event)
+{
+    int h = window()->height();
+    int x = event->position().x();
+    int y = h - event->position().y();
+
+    // h -> m_spanY
+    float ycoord = m_left.y() + (m_spanY * y) / h;
+    float xcoord = m_left.x() + (m_spanY * x / h);
+    m_params.m_c0.setX(x);
+    m_params.m_c0.setY(y);
+
+    auto r = static_cast<FractalFrameBufferObjectRenderer*>(getRenderer());
+    if (r)
+    {
+        r->setFractalParams(m_params);
+    }
+
+    QQuickItem::mouseMoveEvent(event);
     update();
 }

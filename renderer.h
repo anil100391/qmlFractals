@@ -1,10 +1,13 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include "fractalParams.h"
+
 #include <QSize>
 
 #include <QObject>
 #include <QOpenGLFunctions>
+#include <QQuickFramebufferObject>
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -15,25 +18,27 @@ class QOpenGLVertexArrayObject;
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-class MeshRenderer : public QObject
+class FractalFrameBufferObjectRenderer : public QQuickFramebufferObject::Renderer
 {
-    Q_OBJECT
 public:
-    MeshRenderer() : m_t(0), m_program(0) {}
-    ~MeshRenderer();
 
-    void setT(qreal t) { m_t = t; }
-    void setMode(int mode) { m_mode = mode; }
+    FractalFrameBufferObjectRenderer() = default;
+    virtual ~FractalFrameBufferObjectRenderer();
 
-public slots:
-    void init();
-    void paint();
+    void synchronize(QQuickFramebufferObject *item) Q_DECL_OVERRIDE;
+    void render() Q_DECL_OVERRIDE;
+
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) Q_DECL_OVERRIDE;
+
+    void setFractalParams(const FractalParams& params);
 
 private:
-    void allocatePositionBuffer(int w, int h);
+    void allocatePositionBuffer();
 
-    qreal                     m_t;
-    int						  m_mode = 0;
+    FractalParams             m_params;
+    QSize                     m_size{600, 400};
+
+    // gl stuff
     QOpenGLBuffer            *m_positionBuffer = nullptr;
     QOpenGLBuffer            *m_indexBuffer = nullptr;
     QOpenGLVertexArrayObject *m_vao = nullptr;

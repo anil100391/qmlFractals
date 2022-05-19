@@ -3,13 +3,46 @@
 #include <QRunnable>
 #include <QQuickWindow>
 #include <QOpenGLBuffer>
+#include <QQuickOpenGLUtils>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFramebufferObjectFormat>
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void MeshRenderer::init()
+FractalFrameBufferObjectRenderer::~FractalFrameBufferObjectRenderer()
 {
+    m_positionBuffer->destroy();
+    m_indexBuffer->destroy();
+    m_vao->destroy();
+    delete m_program;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+QOpenGLFramebufferObject *FractalFrameBufferObjectRenderer::createFramebufferObject(const QSize &size)
+{
+    QOpenGLFramebufferObjectFormat format;
+    format.setSamples(4);
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    return new QOpenGLFramebufferObject(size, format);
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void FractalFrameBufferObjectRenderer::synchronize(QQuickFramebufferObject *item)
+{
+    auto win = item ? item->window() : nullptr;
+    if (win && win->size() != m_size)
+    {
+        m_size = win->size();
+        if (m_program)
+        {
+            allocatePositionBuffer();
+        }
+    }
+
     if (!m_program)
     {
         // Create VAO for first object to render
@@ -23,7 +56,7 @@ void MeshRenderer::init()
         m_positionBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         m_positionBuffer->create();
         m_positionBuffer->setUsagePattern( QOpenGLBuffer::StaticDraw );
-        allocatePositionBuffer(600, 400);
+        allocatePositionBuffer();
 
         m_indexBuffer = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
         m_indexBuffer->create();
@@ -68,7 +101,7 @@ void MeshRenderer::init()
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void MeshRenderer::paint()
+void FractalFrameBufferObjectRenderer::render()
 {
     auto cxt = QOpenGLContext::currentContext();
     auto f = cxt->functions();
@@ -80,6 +113,12 @@ void MeshRenderer::paint()
     m_viewportSize.setHeight(viewportSize[3]);
     float w = m_viewportSize.width();
     float h = m_viewportSize.height();
+    if (w != m_size.width() || h != m_size.height())
+    {
+        m_size.setWidth(w);
+        m_size.setHeight(h);
+        allocatePositionBuffer();
+    }
 
     f->glDisable(GL_DEPTH_TEST);
     f->glEnable(GL_BLEND);
@@ -91,47 +130,48 @@ void MeshRenderer::paint()
     QMatrix4x4 mvp;
     mvp.ortho(0.0f, w, 0.0f, h, -1.0f, 1.0f);
 
-    QVector2D m_c0(0.0f, 0.0f);
+    QVector2D c0 = m_params.m_c0;
     float m_spanY = 3.0f;
     QVector2D m_center(0.0f, 0.0f);
-    bool m_showGrid = true;
+    int mode = m_params.type;
+    bool grid = m_params.grid;
     m_program->setUniformValue("u_Color", 1.0f, 1.0f, 0.0f, 1.0f);
     m_program->setUniformValue("u_MVP", mvp);
-    m_program->setUniformValue("u_C0", -3 + (4.0 * m_c0.x())/w, -1.5 + (3.0 * m_c0.y())/h);
+    m_program->setUniformValue("u_C0", -3 + (4.0 * c0.x())/w, -1.5 + (3.0 * c0.y())/h);
     m_program->setUniformValue("u_AspectRatio", 1.0f * w / h);
     m_program->setUniformValue("u_SpanY", m_spanY);
     m_program->setUniformValue("u_Center", m_center);
-    m_program->setUniformValue("u_Mode", m_mode);
+    m_program->setUniformValue("u_Mode", mode);
     m_program->setUniformValue("u_Width", (int)w);
     m_program->setUniformValue("u_Height", (int)h);
-    m_program->setUniformValue("u_ShowGrid", (m_showGrid && m_mode != 2) ? 1 : 0);
+    m_program->setUniformValue("u_ShowGrid", (grid && mode != 2) ? 1 : 0);
 
     m_vao->bind();
     f->glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     m_vao->release();
+
+    QQuickOpenGLUtils::resetOpenGLState();
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-MeshRenderer::~MeshRenderer()
+void FractalFrameBufferObjectRenderer::setFractalParams(const FractalParams &params)
 {
-    m_positionBuffer->destroy();
-    m_indexBuffer->destroy();
-    m_vao->destroy();
-    delete m_program;
+    m_params = params;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void MeshRenderer::allocatePositionBuffer(int w, int h)
+void FractalFrameBufferObjectRenderer::allocatePositionBuffer()
 {
-    if (w == -1)
+    int w = m_size.width();
+    int h = m_size.height();
+
+    if (w < 0)
         w = 600;
-    if (h == -1)
+    if (h < 0)
         h = 400;
 
-    w*=2;
-    h*=2;
     m_positionBuffer->bind();
     float pad = 0.0f;
     float positionData[] = { pad, pad,

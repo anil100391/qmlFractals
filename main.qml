@@ -14,14 +14,15 @@ Item
     MeshRenderer
     {
         id : fractal
-        mode : julia.checked ? 0 : (mandel.checked ? 1 : 2)
+        mode : 1 //julia.checked ? 0 : (mandel.checked ? 1 : 2)
+        /*
         SequentialAnimation on t
         {
             NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
             NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
             loops: Animation.Infinite
             running: true
-        }
+        }*/
         anchors.fill : parent
     }
 
@@ -63,6 +64,7 @@ Item
         }
     }
 
+    /*
     Rectangle
     {
         id : buttonBox
