@@ -33,15 +33,7 @@ QOpenGLFramebufferObject *FractalFrameBufferObjectRenderer::createFramebufferObj
 // -----------------------------------------------------------------------------
 void FractalFrameBufferObjectRenderer::synchronize(QQuickFramebufferObject *item)
 {
-    auto win = item ? item->window() : nullptr;
-    if (win && win->size() != m_size)
-    {
-        m_size = win->size();
-        if (m_program)
-        {
-            allocatePositionBuffer();
-        }
-    }
+    Q_UNUSED(item);
 
     if (!m_program)
     {
