@@ -136,6 +136,7 @@ void FractalFrameBufferObjectRenderer::render()
     m_program->setUniformValue("u_Mode", mode);
     m_program->setUniformValue("u_Width", (int)w);
     m_program->setUniformValue("u_Height", (int)h);
+    m_program->setUniformValue("u_Iter", (int)m_fractalParams.iterations);
     m_program->setUniformValue("u_ShowGrid", (grid && mode != 2) ? 1 : 0);
 
     m_vao->bind();

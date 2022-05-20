@@ -58,6 +58,38 @@ void FractalFrameBufferObject::setMode(int mode)
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+float FractalFrameBufferObject::iterations() const
+{
+    auto r = static_cast<FractalFrameBufferObjectRenderer*>(getRenderer());
+    if (r)
+    {
+        auto params = r->getFractalParams();
+        return params.iterations;
+    }
+
+    return FractalParams().iterations;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void FractalFrameBufferObject::setIterations(float iterations)
+{
+    auto r = static_cast<FractalFrameBufferObjectRenderer*>(getRenderer());
+    if (r)
+    {
+        auto params = r->getFractalParams();
+        if (params.iterations == iterations)
+            return;
+
+        params.iterations = iterations;
+        r->setFractalParams(params);
+        emit iterationsChanged();
+        update();
+    }
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void FractalFrameBufferObject::mousePressEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);

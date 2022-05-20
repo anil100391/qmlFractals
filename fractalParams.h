@@ -10,6 +10,7 @@ struct FractalParams
     enum TYPE {JULIA, MANDELBROT, NEWTON};
     TYPE type = MANDELBROT;
     bool grid = false;
+    int  iterations  = 100;
     QVector2D m_c0; // relevant only for JULIA
 };
 

@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import MyRenderLibrary 42.0
 
@@ -14,7 +14,23 @@ Item
     {
         id : fractal
         mode : view.currentIndex
+        iterations : iterations.value
         anchors.fill : parent
+        Rectangle
+        {
+            height : 40
+            color : Qt.rgba(1.0, 1.0, 1.0, 0.05);
+            anchors { left : parent.left; right : parent.right; }
+            Slider
+            {
+                id : iterations
+                from : 10
+                value : 100
+                to : 500
+                anchors.fill : parent
+                anchors.margins : 10
+            }
+        }
     }
 
     Rectangle
