@@ -126,7 +126,7 @@ void FractalFrameBufferObjectRenderer::render()
     float spanY = h * m_viewParams.m_distPerPixel;
 
     int mode = m_fractalParams.type;
-    bool grid = m_fractalParams.grid;
+    bool grid = true;//m_fractalParams.grid;
     m_program->setUniformValue("u_Color", 1.0f, 1.0f, 0.0f, 1.0f);
     m_program->setUniformValue("u_MVP", mvp);
     m_program->setUniformValue("u_C0", c0.x(), c0.y());
@@ -173,6 +173,9 @@ void FractalFrameBufferObjectRenderer::init(QQuickFramebufferObject *item)
     qreal h = item->height();
     m_viewParams.m_center = QVector2D(0.0f, 0.0f);
     m_viewParams.m_distPerPixel = w < h ? 3.0f / w : 2.0f / h;
+#if ANDROID
+    m_viewParams.m_distPerPixel = w < h ? 3.0f / 1080 : 2.0f / 1920;
+#endif
 }
 
 // -----------------------------------------------------------------------------

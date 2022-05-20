@@ -155,7 +155,7 @@ std::string fshader =
 "    roots[1] = vec2(0.88464618, 0.58974281);\n"
 "    roots[2] = vec2(0.88464618, -0.58974281);\n"
 "\n"
-"    float tol = 0.00001;\n"
+"    float tol = 0.0001;\n"
 "\n"
 "    int i = 0;\n"
 "\n"

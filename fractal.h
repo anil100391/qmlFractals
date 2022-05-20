@@ -10,8 +10,8 @@ class FractalFrameBufferObject : public QQuickFramebufferObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int mode READ mode WRITE setMode NOTIFY iterationsChanged)
-    Q_PROPERTY(float iterations READ iterations WRITE setIterations NOTIFY modeChanged)
+    Q_PROPERTY(int mode READ mode WRITE setMode NOTIFY modeChanged)
+    Q_PROPERTY(float iterations READ iterations WRITE setIterations NOTIFY iterationsChanged)
 
 public:
     explicit FractalFrameBufferObject(QQuickItem *parent = nullptr);
@@ -32,9 +32,7 @@ signals:
 protected:
     virtual void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-#if !ANDROID
     virtual void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
-#endif
 
 private:
 
