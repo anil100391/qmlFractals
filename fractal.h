@@ -34,8 +34,6 @@ private:
 
     Renderer      *m_renderer = nullptr;
     FractalParams  m_params;
-    QVector2D      m_left{-3.0f, -1.5f};
-    float          m_spanY = 3.0f;
 };
 
 #endif // FRACTAL_H

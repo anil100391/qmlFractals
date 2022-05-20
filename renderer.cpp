@@ -33,7 +33,7 @@ QOpenGLFramebufferObject *FractalFrameBufferObjectRenderer::createFramebufferObj
 // -----------------------------------------------------------------------------
 void FractalFrameBufferObjectRenderer::synchronize(QQuickFramebufferObject *item)
 {
-    Q_UNUSED(item);
+    init(item);
 
     if (!m_program)
     {
@@ -122,17 +122,17 @@ void FractalFrameBufferObjectRenderer::render()
     QMatrix4x4 mvp;
     mvp.ortho(0.0f, w, 0.0f, h, -1.0f, 1.0f);
 
-    QVector2D c0 = m_params.m_c0;
-    float m_spanY = 3.0f;
-    QVector2D m_center(0.0f, 0.0f);
-    int mode = m_params.type;
-    bool grid = m_params.grid;
+    QVector2D c0 = pixelToCoord(m_fractalParams.m_c0);
+    float spanY = h * m_viewParams.m_distPerPixel;
+
+    int mode = m_fractalParams.type;
+    bool grid = m_fractalParams.grid;
     m_program->setUniformValue("u_Color", 1.0f, 1.0f, 0.0f, 1.0f);
     m_program->setUniformValue("u_MVP", mvp);
-    m_program->setUniformValue("u_C0", -3 + (4.0 * c0.x())/w, -1.5 + (3.0 * c0.y())/h);
+    m_program->setUniformValue("u_C0", c0.x(), c0.y());
     m_program->setUniformValue("u_AspectRatio", 1.0f * w / h);
-    m_program->setUniformValue("u_SpanY", m_spanY);
-    m_program->setUniformValue("u_Center", m_center);
+    m_program->setUniformValue("u_SpanY", spanY);
+    m_program->setUniformValue("u_Center", mode == 1 ? QVector2D(-0.5f, 0.0f) : m_viewParams.m_center );
     m_program->setUniformValue("u_Mode", mode);
     m_program->setUniformValue("u_Width", (int)w);
     m_program->setUniformValue("u_Height", (int)h);
@@ -149,7 +149,30 @@ void FractalFrameBufferObjectRenderer::render()
 // -----------------------------------------------------------------------------
 void FractalFrameBufferObjectRenderer::setFractalParams(const FractalParams &params)
 {
-    m_params = params;
+    m_fractalParams = params;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void FractalFrameBufferObjectRenderer::init(QQuickFramebufferObject *item)
+{
+    static bool initialized = false;
+    if (initialized || !item)
+        return;
+
+    initialized = true;
+    qreal w = item->width();
+    qreal h = item->height();
+    m_viewParams.m_center = QVector2D(0.0f, 0.0f);
+    m_viewParams.m_distPerPixel = w < h ? 3.0f / w : 2.0f / h;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+QVector2D FractalFrameBufferObjectRenderer::pixelToCoord(const QVector2D &pixel) const
+{
+    QVector2D centerPixel( m_size.width() / 2.0f, m_size.height() / 2.0f );
+    return m_viewParams.m_center + (pixel - centerPixel) * m_viewParams.m_distPerPixel;
 }
 
 // -----------------------------------------------------------------------------

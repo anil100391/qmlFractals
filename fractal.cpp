@@ -47,7 +47,6 @@ void FractalFrameBufferObject::setMode(int mode)
 // -----------------------------------------------------------------------------
 void FractalFrameBufferObject::mousePressEvent(QMouseEvent *event)
 {
-
 }
 
 // -----------------------------------------------------------------------------
@@ -58,9 +57,6 @@ void FractalFrameBufferObject::mouseMoveEvent(QMouseEvent *event)
     int x = event->position().x();
     int y = h - event->position().y();
 
-    // h -> m_spanY
-    float ycoord = m_left.y() + (m_spanY * y) / h;
-    float xcoord = m_left.x() + (m_spanY * x / h);
     m_params.m_c0.setX(x);
     m_params.m_c0.setY(y);
 

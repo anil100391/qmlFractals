@@ -33,9 +33,12 @@ public:
     void setFractalParams(const FractalParams& params);
 
 private:
+    void init(QQuickFramebufferObject *item);
     void allocatePositionBuffer();
+    QVector2D pixelToCoord(const QVector2D& pixel) const;
 
-    FractalParams             m_params;
+    FractalParams             m_fractalParams;
+    CartesianGridView         m_viewParams;
     QSize                     m_size{600, 400};
 
     // gl stuff

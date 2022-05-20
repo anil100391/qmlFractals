@@ -7,9 +7,8 @@ import MyRenderLibrary 42.0
 // -----------------------------------------------------------------------------
 Item
 {
-    width: 600
-    height: 400
-
+    width: 400
+    height: 600
     // Fractal
     MeshRenderer
     {
