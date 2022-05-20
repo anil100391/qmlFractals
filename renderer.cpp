@@ -154,6 +154,13 @@ void FractalFrameBufferObjectRenderer::setFractalParams(const FractalParams &par
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+void FractalFrameBufferObjectRenderer::setViewParams(const CartesianGridView &viewParams)
+{
+    m_viewParams = viewParams;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void FractalFrameBufferObjectRenderer::init(QQuickFramebufferObject *item)
 {
     static bool initialized = false;

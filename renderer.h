@@ -31,6 +31,10 @@ public:
     QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) Q_DECL_OVERRIDE;
 
     void setFractalParams(const FractalParams& params);
+    const FractalParams& getFractalParams() const { return m_fractalParams; }
+
+    void setViewParams(const CartesianGridView& viewParams);
+    const CartesianGridView& getViewParams() const { return m_viewParams; }
 
 private:
     void init(QQuickFramebufferObject *item);
